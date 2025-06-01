@@ -1,0 +1,21 @@
+{% extends "podstawa.html" %}
+{% block title %}Deszyfruj{% endblock %}
+{% block content %}
+
+    <!--region Formularz z danymi do odszyfrowania-->
+    <h1>Deszyfruj dane</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Deszyfruj</button>
+    </form>
+    <!--endregion-->
+
+    <!--region Pole z odszyfrowanym tekstem-->
+    {% if deszyfrowany_tekst %}
+        <h2>Odszyfrowany tekst:</h2>
+        <textarea readonly rows="5" cols="50">{{ deszyfrowany_tekst }}</textarea>
+    {% endif %}
+    <!-- endregion -->
+
+{% endblock %}

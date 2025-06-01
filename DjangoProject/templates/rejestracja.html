@@ -1,0 +1,39 @@
+{% extends "podstawa.html" %}
+{% block title %}Rejestracja{% endblock %}
+{% block content %}
+
+    <!--region Formularz do rejestracji-->
+    <h1>Rejestracja</h1>
+    <form method="post">
+            {% csrf_token %}
+            <p>
+                {{ formularz.username.label_tag }}
+                {{ formularz.username }}
+                {% for error in formularz.username.errors %}
+                  <div class="notif error">{{ error }}</div>
+                {% endfor %}
+            </p>
+
+            <p>
+                {{ formularz.haslo.label_tag }}
+                {{ formularz.haslo }}
+                {% for error in formularz.haslo.errors %}
+                  <div class="notif error">{{ error }}</div>
+                {% endfor %}
+            </p>
+
+            <p>
+                {{ formularz.haslo2.label_tag }}
+                {{ formularz.haslo2 }}
+                {% for error in formularz.haslo2.errors %}
+                  <div class="notif error">{{ error }}</div>
+                {% endfor %}
+            </p>
+            <button type="submit">Zarejestruj</button>
+    </form>
+    <!--endregion-->
+    <br>
+    {# Przycisk do zalogowania się #}
+    <a href="{% url 'logowanie' %}">Masz już konto? Zaloguj się</a>
+
+{% endblock %}

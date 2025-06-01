@@ -1,0 +1,70 @@
+{% extends "podstawa.html" %}
+{% block title %}Twoje Pliki{% endblock %}
+{% block content %}
+
+    <h1>Twoje Pliki</h1>
+    <!--region Dodawanie pliku do bazy-->
+    <h3>Dodaj plik ręcznie:</h3>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ formularz.as_p }}
+        <button type="submit">Dodaj do bazy</button>
+    </form>
+    <!--endregion-->
+    <br>
+    <!--region Tabela z plikami użytkownika-->
+    <h2>Twoje zaszyfrowane pliki</h2>
+    <table>
+        <thead>
+            <tr>
+                <th data-sort="0">Nazwa pliku</th>
+                <th data-sort="1">Data utworzenia</th>
+                <th data-sort="2">Metoda</th>
+                <th>Klucz</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for plik in pliki %}
+            <tr>
+                <td class="nowrap">{{ plik.file.name|cut:"files/" }}</td>
+                <td>{{ plik.date_created|date:"Y-m-d H:i:s" }}</td>
+                <td class="nowrap">{{ plik.szyfr }}</td>
+                <td class="komorka-klucz">
+                    <details id="{{ plik.id }}">
+                        <summary>Pokaż klucz</summary>
+                        <pre>{{ plik.klucz }}</pre>
+                    </details>
+                </td>
+                <td>
+                    <div class="akcje">
+                        <form method="get" action="{% url 'pobierz_plik' plik.id %}">
+                            <button type="submit">Pobierz</button>
+                        </form>
+                        <form method="post" action="{% url 'odszyfruj_plik' plik.id %}">
+                            {% csrf_token %}
+                            <button type="submit">Odszyfruj</button>
+                        </form>
+                        <form method="post" action="{% url 'usun_plik' plik.id %}">
+                            {% csrf_token %}
+                            <button type="submit">Usuń</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <!--endregion-->
+
+    <!--region Zawartość odszyfrowanego pliku-->
+    {% if odszyfrowany %}
+        <div class="odszyfrowany-box">
+            <h3>Odszyfrowany tekst:</h3>
+            <textarea rows="5" readonly>{{ odszyfrowany }}</textarea>
+        </div>
+    {% endif %}
+    <!--endregion-->
+
+{% endblock %}
+

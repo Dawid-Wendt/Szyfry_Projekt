@@ -1,0 +1,36 @@
+{% extends "podstawa.html" %}
+{% block title %}Logowanie{% endblock %}
+{% block content %}
+    <h1>Logowanie</h1>
+    {% if messages %}
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <!--region Formularz do logowania-->
+    <form method="post">
+        {% csrf_token %}
+        <p>
+            {{ formularz.username.label_tag }}
+            {{ formularz.username }}
+            {% for error in formularz.username.errors %}
+              <div class="notif error">{{ error }}</div>
+            {% endfor %}
+        </p>
+
+        <p>
+            {{ formularz.password.label_tag }}
+            {{ formularz.password }}
+            {% for error in formularz.password.errors %}
+              <div class="notif error">{{ error }}</div>
+            {% endfor %}
+        </p>
+
+        <button type="submit">Zaloguj</button>
+    </form>
+    <!--endregion-->
+    <br>
+    {# Przycisk do rejestacji #}
+    <a href="{% url 'rejestracja' %}">Nie masz konta? Zarejestruj się</a>
+{% endblock %}

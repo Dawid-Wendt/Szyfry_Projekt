@@ -1,0 +1,78 @@
+{% extends "podstawa.html" %}
+{% block title %}Szyfruj{% endblock %}
+{% block content %}
+
+    <!--region Formularz z danymi do szyfrowania-->
+    <h1>Szyfruj dane</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Szyfruj</button>
+    </form>
+    <br>
+    <!--endregion-->
+
+    <!--region Skrypt do wypełnienia pola klucz gdy losowy-->
+    {% if klucz %}
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const pole = document.querySelector("input[name='klucz']");
+                if (pole && pole.value === "") {
+                    pole.value = "{{ klucz }}";
+                }
+            });
+        </script>
+    {% endif %}
+    <!-- endregion -->
+
+    <!--region Skrypt do pobierania pliku zaszyfrowanego tekstu-->
+    <script>
+        function Pobierz_Plik() {
+            const tekst = document.getElementById("zaszfyrowany").value;
+            const metoda = document.querySelector("input[name='metoda']")?.value;
+            const now = new Date();
+            const date = now.toISOString().slice(0,19).replace(/:/g, "-").replace("T", "_");
+            const fileName = `plik_${metoda}_${date}.txt`;
+
+            const blob = new Blob([tekst], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.getElementById("link");
+            link.href = url;
+            link.download = fileName;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+    <!--endregion-->
+
+    <!--region Pole z zaszyfrowanym Tekstem i przyciskami do pobierania i zapisywania do bazy-->
+    {% if zaszyfrowany_tekst %}
+        <h2>Zaszyfrowany tekst:</h2>
+        <textarea id="zaszfyrowany" readonly rows="5" cols="50">{{ zaszyfrowany_tekst }}</textarea>
+        <h2>Wygenerowany klucz do deszyfrowania:</h2>
+        <textarea id="klucz" readonly rows="5" cols="50">{{ klucz }}</textarea>
+        {# Pole z zaszyfrowanym tekstem #}
+        <a id="link" style="display: none;"></a>
+        <button type="button" onclick="Pobierz_Plik()">Pobierz jako plik</button> {# Przycisk do zapisu pliku na dysk #}
+
+        {% if user.is_authenticated %} {# Przycisk do zapisu do bazy #}
+            <form method="post" style="display:inline;">
+                {% csrf_token %}
+
+                {# hidden ponieważ tylko chcemy dane do formularza nie ma ich użytkownik widzieć! #}
+                <input type="hidden" name="zapisz_do_bazy" value="1">
+                <input type="hidden" name="tekst" value="{{ zaszyfrowany_tekst }}">
+                <input type="hidden" name="metoda" value="{{ metoda }}">
+                <input type="hidden" name="klucz" value="{{ klucz }}">
+                {# hidden ponieważ tylko chcemy dane do formularza nie ma ich użytkownik widzieć! #}
+
+                <button type="submit">Zapisz do bazy danych</button>
+            </form>
+        {% endif %}
+    {% endif %}
+    <!--endregion-->
+
+{% endblock %}
+
+

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    {% if messages %}
+    <div id="notifications">
+        {% for message in messages %}
+            <div class="notif {{ message.tags|default:'info' }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+    <!-- region Pasek nawigacyjny-->
+    <nav class="navbar">
+        <a href="{% url 'info' %}">Info</a> |
+        <a href="{% url 'szyfruj' %}">Szyfruj</a> |
+        <a href="{% url 'deszyfruj' %}">Deszyfruj</a> |
+        {% if user.is_authenticated %}
+            <a href="{% url 'moje_pliki' %}">Twoje Pliki</a> |
+            <a href="{% url 'wylogowanie' %}">Wyloguj</a>
+        {% else %}
+            <a href="{% url 'logowanie' %}">Zaloguj</a>
+        {% endif %}
+    </nav>
+    <!-- endregion -->
+
+    <!-- region Główna zawartość strony -->
+    <main class="content">
+        {% block content %}
+        {% endblock %}
+    </main>
+    <!-- endregion -->
+</body>
+</html>
+
+{# Skrypt do ładnej nawigacji w twoich plikach, żeby strona nie skakała itd. podczas odszyfrowywania#}
+<script>
+  // Ukryj stronę na start
+  document.documentElement.classList.add("scrolled-hidden");
+  document.body.classList.add("scrolled-hidden");
+
+  window.addEventListener("load", function () {
+    const tabela = document.querySelector("table");
+
+    // 1. Przywróć rozwinięte <details>
+    const openedDetails = JSON.parse(localStorage.getItem("openedDetails") || "[]");
+    openedDetails.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.tagName === "DETAILS") el.open = true;
+    });
+    localStorage.removeItem("openedDetails");
+
+    // 2. Przywróć sortowanie kolumny
+    const sortState = JSON.parse(localStorage.getItem("sortState") || "null");
+    if (sortState && tabela) {
+      const th = tabela.querySelectorAll("thead th[data-sort]")[sortState.column];
+      if (th) {
+        applySort(tabela, sortState.column, sortState.direction, true); // true = nie zapisz ponownie
+      }
+    }
+
+    // 3. Przywróć scroll
+    const scrollTop = localStorage.getItem("scrollTop");
+    if (scrollTop !== null) {
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          window.scrollTo(0, parseInt(scrollTop));
+          document.documentElement.classList.remove("scrolled-hidden");
+          document.body.classList.remove("scrolled-hidden");
+          localStorage.removeItem("scrollTop");
+        });
+      }, 20);
+    } else {
+      document.documentElement.classList.remove("scrolled-hidden");
+      document.body.classList.remove("scrolled-hidden");
+    }
+
+    // 4. Podłącz kliknięcia kolumn
+    if (tabela) {
+      const ths = tabela.querySelectorAll("thead th[data-sort]");
+      let currentSortDir = 1;
+      ths.forEach((th, idx) => {
+        th.style.cursor = "pointer";
+        th.addEventListener("click", () => {
+          currentSortDir = (sortState?.column === idx) ? -sortState.direction : 1;
+          applySort(tabela, idx, currentSortDir);
+        });
+      });
+    }
+  });
+
+  // Sortowanie funkcjonalne + zapisywanie
+  function applySort(tabela, columnIndex, direction, skipSave = false) {
+    const rows = Array.from(tabela.querySelectorAll("tbody tr"));
+    const isDate = columnIndex === 1;
+
+    rows.sort((a, b) => {
+      let aVal = a.children[columnIndex].innerText.trim();
+      let bVal = b.children[columnIndex].innerText.trim();
+
+      if (isDate) {
+        return (new Date(aVal) - new Date(bVal)) * direction;
+      } else {
+        return aVal.localeCompare(bVal, "pl") * direction;
+      }
+    });
+
+    const tbody = tabela.querySelector("tbody");
+    rows.forEach(row => tbody.appendChild(row));
+
+    if (!skipSave) {
+      localStorage.setItem("sortState", JSON.stringify({
+        column: columnIndex,
+        direction: direction
+      }));
+    }
+  }
+
+  // Zapisz scroll + rozwinięte <details> przy zamykaniu strony
+  window.addEventListener("beforeunload", function () {
+    localStorage.setItem("scrollTop", window.scrollY);
+    const opened = [];
+    document.querySelectorAll("details[open][id]").forEach(d => {
+      opened.push(d.id);
+    });
+    localStorage.setItem("openedDetails", JSON.stringify(opened));
+  });
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const tabela = document.querySelector("table");
+  if (!tabela) return;
+  const ths = tabela.querySelectorAll("thead th[data-sort]");
+  let sortDir = 1;
+
+  ths.forEach(th => {
+    th.style.cursor = "pointer";
+    th.addEventListener("click", () => {
+      const index = parseInt(th.getAttribute("data-sort"));
+      const rows = Array.from(tabela.querySelectorAll("tbody tr"));
+
+      rows.sort((a, b) => {
+        const aVal = a.children[index].innerText.trim().toLowerCase();
+        const bVal = b.children[index].innerText.trim().toLowerCase();
+        return aVal.localeCompare(bVal, "pl") * sortDir;
+      });
+
+      const tbody = tabela.querySelector("tbody");
+      rows.forEach(row => tbody.appendChild(row));
+      sortDir *= -1;
+    });
+  });
+});
+</script>
+
+<script>
+function pokaz(id) {
+  ['info','aes', 'rsa', 'mceliece'].forEach(nazwa => {
+    const el = document.getElementById(nazwa);
+    if (el) {
+      el.style.display = (nazwa === id) ? 'block' : 'none';
+    }
+  });
+}
+</script>

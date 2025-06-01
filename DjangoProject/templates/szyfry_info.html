@@ -1,0 +1,56 @@
+{% extends "podstawa.html" %}
+{% block title %}Informacje o Algorytmach{% endblock %}
+{% block content %}
+
+<div class="algorytm-buttons" style="display: flex; justify-content: space-around; margin-bottom: 20px;">
+    <button onclick="pokaz('info')">Info</button>
+    <button onclick="pokaz('aes')">AES</button>
+    <button onclick="pokaz('rsa')">RSA</button>
+    <button onclick="pokaz('mceliece')">McEliece</button>
+</div>
+
+<div id="info" class="section-szyfr">
+    <h2>O stronie</h2>
+    <p>Strona pozwala na testowanie trzech algorytmów szyfrowania: <strong>AES</strong>, <strong>RSA</strong> oraz <strong>McEliece</strong> (symulacja).</p>
+    <p>Użytkownik może zaszyfrować dowolny tekst, wykorzystując wybraną metodę oraz jedno hasło, z którego generowane są potrzebne klucze.</p>
+    <p>Dostępna jest również funkcja odszyfrowania przy użyciu odpowiedniego klucza. Po zalogowaniu możliwy jest zapis danych do konta użytkownika.</p>
+    <p><strong>Uwaga:</strong> Witryna ma charakter edukacyjny!</p>
+</div>
+
+
+<div id="aes" class="section-szyfr" style="display: none">
+    <h2>AES (Advanced Encryption Standard)</h2>
+    <p><strong>Rodzaj:</strong> Szyfrowanie symetryczne</p>
+    <p><strong>Opis:</strong> Nowoczesny szyfr blokowy, operuje na blokach 128-bitowych. Klucz 128-bit generowany z SHA256(hasła).</p>
+    <p><strong>W kodzie:</strong> Tryb EAX – zapewnia poufność i integralność danych.</p>
+    <p><strong>Zastosowania:</strong> Wi-Fi (WPA2), HTTPS, VPN, BitLocker, LUKS</p>
+    <p><strong>Status:</strong> Powszechnie przyjęty standard (FIPS)</p>
+    <p><strong>Bezpieczeństwo:</strong> Niezłamany, bardzo bezpieczny</p>
+    <p><strong>Czas złamania:</strong> AES-128 ≈ 2¹²⁸ operacji</p>
+</div>
+
+<div id="rsa" class="section-szyfr" style="display: none">
+    <h2>RSA (Rivest–Shamir–Adleman)</h2>
+    <p><strong>Rodzaj:</strong> Szyfrowanie asymetryczne</p>
+    <p><strong>Opis:</strong> Operuje na zasadzie potęgowania modulo n. Klucz generowany deterministycznie z hasła.</p>
+    <p><strong>W kodzie:</strong> RSA-2048, padding OAEP, klucz eksportowany w formacie PEM.</p>
+    <p><strong>Zastosowania:</strong> HTTPS, podpisy cyfrowe, certyfikaty X.509</p>
+    <p><strong>Status:</strong> Powszechnie używany standard od lat 90.</p>
+    <p><strong>Bezpieczeństwo:</strong> Bezpieczny przy kluczach ≥ 2048 bitów</p>
+    <p><strong>Czas złamania:</strong> RSA-2048 ≈ 2¹¹² operacji</p>
+</div>
+
+<div id="mceliece" class="section-szyfr" style="display: none">
+    <h2>McEliece (symulacja edukacyjna)</h2>
+    <p><strong>Rodzaj:</strong> Szyfrowanie asymetryczne (Post-Quantum)</p>
+    <p><strong>Opis:</strong> Teoretycznie oparty na kodach Goppa. Nasza wersja odwzorowuje wzór <code>c = m · G mod 2</code>, ale bez błędów i dekodera.</p>
+    <p><strong>W kodzie:</strong> Generowanie macierzy G z hasła, brak szumu, brak dekodera.</p>
+    <p><strong>Zastosowania:</strong> TLS PQC (oryginał), rekomendacja NIST</p>
+    <p><strong>Status oryginału:</strong> Przyjęty przez NIST, ale rzadko wdrażany (klucze >200 KB)</p>
+    <p><strong>Bezpieczeństwo:</strong> Symulacja – NIEbezpieczna, Oryginał – niezłamany</p>
+    <p><strong>Szacowany czas złamania:</strong> McEliece ≥ 2²⁵⁶ operacji (oryginał)</p>
+    <p><strong>⚠️ Uwaga:</strong> Ten wariant służy jedynie edukacji matematycznej. To jest uproszczona wersja algorytmu McEliece. Wersja prawdziwa używa kodów Goppa i matematyki w GF(2), tutaj skupiamy się na strukturze i symulacji procesu.</p>
+</div>
+
+{% endblock %}
+
