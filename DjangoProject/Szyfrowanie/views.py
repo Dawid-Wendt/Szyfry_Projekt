@@ -33,10 +33,10 @@ class Rejestracja_Widok(View):
                     password=formularz.cleaned_data["haslo"]
                 )
                 login(request, user)
-                messages.success(request, "Rejestracja udana.")
+                messages.success(request, "Rejestracja udana.", extra_tags="fade")
                 return redirect("moje_pliki")
             except Exception as e:
-                messages.error(request, f"Błąd rejestracji: {str(e)}")
+                messages.error(request, f"Błąd rejestracji: {str(e)}", extra_tags="fade")
 
         return render(request, self.template_name, {"formularz": formularz})
 
@@ -63,16 +63,16 @@ class Logowanie_Widok(View):
                 refresh = RefreshToken.for_user(user)
                 access_token = str(refresh.access_token)
 
-                messages.success(request, "Zalogowano pomyślnie.")
+                messages.success(request, "Zalogowano pomyślnie.", extra_tags="fade")
                 return redirect("moje_pliki")
 
-        messages.error(request, "Nieprawidłowa nazwa użytkownika lub hasło.")
+        messages.error(request, "Nieprawidłowa nazwa użytkownika lub hasło.", extra_tags="fade")
         return render(request, self.template_name, {"formularz": formularz})
 
 class Wylogowanie_Widok(View):
     def get(self, request):
         logout(request)
-        messages.info(request, "Wylogowano pomyślnie.")
+        messages.info(request, "Wylogowano pomyślnie.", extra_tags="fade")
         return redirect("logowanie")
 
 
@@ -110,7 +110,7 @@ class Szyfrowanie_Widok(FormView):
         zaszyfrowany = funkcja(tekst, klucz) if funkcja else (None, None)
 
         if zaszyfrowany[0] is None:
-            messages.error(self.request, "Szyfrowanie się nie powiodło.")
+            messages.error(self.request, "Szyfrowanie się nie powiodło.", extra_tags="fade")
 
         return self.render_to_response(self.get_context_data(
             form=form,
@@ -128,16 +128,16 @@ class De_Szyfrowanie_Widok(FormView):
         tekst = formularz.cleaned_data["tekst"]
         plik = formularz.cleaned_data["plik"]
         metoda = formularz.cleaned_data["metoda"]
-        klucz = formularz.cleaned_data.get("klucz")
+        klucz = formularz.cleaned_data.get("klucz").strip()
 
         if plik:
-            tekst = plik.read().decode("utf-8")
+            tekst = plik.read().decode("utf-8", errors="ignore").strip()
 
         funkcja_de_szyfrowania = DE_SZYFRY.get(metoda)
         deszyfrowany_tekst = funkcja_de_szyfrowania(tekst, klucz) if funkcja_de_szyfrowania else "Błąd: nieznana metoda szyfrowania"
 
         if deszyfrowany_tekst is None:
-            messages.error(self.request, "Deszyfrowanie się nie powiodło. Sprawdź dane wejściowe.")
+            messages.error(self.request, "Deszyfrowanie się nie powiodło. Sprawdź dane wejściowe.", extra_tags="fade")
 
         return self.render_to_response(self.get_context_data(form=formularz, deszyfrowany_tekst=deszyfrowany_tekst))
 
@@ -163,10 +163,10 @@ class Moje_Pliki_Widok(LoginRequiredMixin,FormView):
                 try:
                     wynik = deszyfruj(tekst, klucz)
                     if wynik is None:
-                        messages.error(request, "Błąd deszyfrowania")
+                        messages.error(request, "Błąd deszyfrowania", extra_tags="fade")
                         return redirect("moje_pliki")
                 except:
-                    messages.error(request, "Błąd deszyfrowania")
+                    messages.error(request, "Błąd deszyfrowania", extra_tags="fade")
                     return redirect("moje_pliki")
 
             Plik.objects.create(
@@ -177,7 +177,7 @@ class Moje_Pliki_Widok(LoginRequiredMixin,FormView):
                 klucz=klucz
             )
         else:
-            messages.error(request, "Niepoprawne dane formularza.")
+            messages.error(request, "Niepoprawne dane formularza.", extra_tags="fade")
         return redirect("moje_pliki")
 
 class Pobierz_Plik(View):
@@ -201,7 +201,7 @@ class Odszyfruj_Plik(View):
         funkcja = DE_SZYFRY.get(plik.szyfr)
         wynik = funkcja(tekst,plik.klucz) if funkcja else "Błąd odszyfrowywania"
         if wynik is None:
-            messages.error(self.request, "Deszyfrowanie się nie powiodło. Sprawdź dane wejściowe.")
+            messages.error(self.request, "Deszyfrowanie się nie powiodło. Sprawdź dane wejściowe.", extra_tags="fade")
 
         formularz = Form_Dodaj_Plik()
 

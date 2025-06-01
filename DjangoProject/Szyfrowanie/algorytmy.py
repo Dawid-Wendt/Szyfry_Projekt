@@ -8,6 +8,7 @@ from hashlib import sha256  # Hashowanie danych do 256-bitów (np. z hasła)
 import random  # Losowość np. dla RSA
 import secrets  # Bezpieczne generowanie losowych wartości (kryptograficzne)
 import numpy as np  # Obsługa macierzy i operacji matematycznych (dla McEliece)
+from numpy.random import default_rng
 from sympy import Matrix
 
 # Dwa słowniki przechowujące zarejestrowane algorytmy
@@ -119,32 +120,46 @@ def deszyfr_rsa(tekst, klucz):
 
 # ----------------- McEliece (symulacja) -----------------
 
-# Parametry algorytmu – rozmiar macierzy kodującej G
-n, k = 256, 128 # Typowe wartości dla McEliece'a: n > k
+# Parametry algorytmu – G musi być kwadratowa, by była odwracalna
+n, k = 64, 64
 
-# Losowa odwracalna macierz kwadratowa nad GF(2)
 def losowa_macierz_odwracalna(rozmiar, rng):
     while True:
         mat = rng.integers(0, 2, size=(rozmiar, rozmiar), dtype=np.uint8)
         if np.linalg.matrix_rank(mat) == rozmiar:
             return mat
 
-# Losowa macierz permutacji n x n
 def losowa_macierz_permutacji(rozmiar, rng):
     perm = rng.permutation(rozmiar)
     P = np.zeros((rozmiar, rozmiar), dtype=np.uint8)
     P[np.arange(rozmiar), perm] = 1
     return P
 
-# Mnożenie nad GF(2)
 def gf2_matmul(A, B):
     return np.mod(np.dot(A, B), 2).astype(np.uint8)
+
+def gf2_inv(A):
+    A = A.copy()
+    n = A.shape[0]
+    I = np.eye(n, dtype=np.uint8)
+    AI = np.concatenate((A, I), axis=1)
+
+    for i in range(n):
+        if AI[i, i] == 0:
+            for j in range(i+1, n):
+                if AI[j, i] == 1:
+                    AI[[i, j]] = AI[[j, i]]
+                    break
+        for j in range(n):
+            if i != j and AI[j, i] == 1:
+                AI[j] ^= AI[i]
+    return AI[:, n:]
 
 @rejestruj_szyfr("McEliece")
 def szyfr_mceliece(tekst, haslo):
     try:
         seed = int.from_bytes(sha256(haslo.encode()).digest(), "big")
-        rng = np.random.default_rng(seed)
+        rng = default_rng(seed)
 
         G_prim = rng.integers(0, 2, size=(k, n), dtype=np.uint8)
         while np.linalg.matrix_rank(G_prim) < k:
@@ -152,26 +167,31 @@ def szyfr_mceliece(tekst, haslo):
 
         S = losowa_macierz_odwracalna(k, rng)
         P = losowa_macierz_permutacji(n, rng)
-
         G = gf2_matmul(gf2_matmul(S, G_prim), P)
 
-        bity = np.unpackbits(np.frombuffer(tekst.encode(), dtype=np.uint8))
-        if len(bity) > k:
-            m = bity[:k]
-        else:
-            m = np.pad(bity, (0, k - len(bity)), 'constant')
+        tekst_bytes = tekst.encode("utf-8")
+        bity = np.unpackbits(np.frombuffer(tekst_bytes, dtype=np.uint8))
+        bit_len = len(bity)
 
-        c = gf2_matmul(m, G)
-        zaszyfrowane = base64.b64encode(np.packbits(c)).decode()
+        zaszyfrogramy = []
+        for i in range(0, len(bity), k):
+            blok = bity[i:i + k]
+            if len(blok) < k:
+                blok = np.pad(blok, (0, k - len(blok)), constant_values=0)
+            c = gf2_matmul(blok, G)
+            zaszyfrogramy.append(np.packbits(c))
+        zaszyfrowane = base64.b64encode(np.concatenate(zaszyfrogramy)).decode()
 
         key = {
             "S": S.tolist(),
             "G_prim": G_prim.tolist(),
-            "P": P.tolist()
+            "P": P.tolist(),
+            "bit_len": bit_len,
+            "byte_len": len(tekst_bytes)
         }
         key_str = base64.b64encode(str(key).encode()).decode()
         return zaszyfrowane, key_str
-    except:
+    except Exception:
         return None, None
 
 @rejestruj_de_szyfr("McEliece")
@@ -181,21 +201,28 @@ def deszyfr_mceliece(cipher_b64, key_b64):
         S = np.array(key["S"], dtype=np.uint8)
         G_prim = np.array(key["G_prim"], dtype=np.uint8)
         P = np.array(key["P"], dtype=np.uint8)
+        bit_len = key["bit_len"]
+        byte_len = key["byte_len"]
 
-        c = np.unpackbits(np.frombuffer(base64.b64decode(cipher_b64), dtype=np.uint8))[:n]
+        n = P.shape[0]
+        k = S.shape[0]
 
-        # Odwrócenie permutacji P bez kosztownego inv
-        P_inv = np.argsort(np.argmax(P, axis=0))
-        P_inv_mat = np.eye(n, dtype=np.uint8)[:, P_inv]
-        c_prime = gf2_matmul(c, P_inv_mat)
+        c_zbior = np.unpackbits(np.frombuffer(base64.b64decode(cipher_b64), dtype=np.uint8))
+        m_odtworzone = []
 
-        G_pinv = np.linalg.pinv(G_prim).astype(np.float32)
-        m_approx = np.round(np.dot(c_prime, G_pinv)) % 2
+        for i in range(0, len(c_zbior), n):
+            blok = c_zbior[i:i + n]
+            if len(blok) < n:
+                blok = np.pad(blok, (0, n - len(blok)), constant_values=0)
 
-        S_inv = np.linalg.inv(S) % 2
-        m = gf2_matmul(m_approx.astype(np.uint8), S_inv.astype(np.uint8))
+            c_prime = gf2_matmul(blok, np.eye(n, dtype=np.uint8)[:, np.argsort(np.argmax(P, axis=0))])
+            m_blok = gf2_matmul(gf2_matmul(c_prime, gf2_inv(G_prim)), gf2_inv(S))
+            m_odtworzone.append(m_blok)
 
-        bajty = np.packbits(m[:8 * (len(m) // 8)])
-        return bajty.tobytes().decode("utf-8", errors="ignore")
-    except Exception as e:
+        m_calosc = np.concatenate(m_odtworzone)[:bit_len]
+        padded_bits = np.pad(m_calosc, (0, 8 - (m_calosc.size % 8)), constant_values=0)
+        byte_array = np.packbits(padded_bits)
+        odtworzone = byte_array.tobytes()[:byte_len]
+        return odtworzone.decode("utf-8", errors="strict")
+    except Exception:
         return None

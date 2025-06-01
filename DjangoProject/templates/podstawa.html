@@ -6,16 +6,18 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
+{% now "Y" as year %}
 <body>
+<div id="notifications">
     {% if messages %}
-    <div id="notifications">
+
         {% for message in messages %}
             <div class="notif {{ message.tags|default:'info' }}">
                 {{ message }}
             </div>
         {% endfor %}
-    </div>
-{% endif %}
+    {% endif %}
+</div>
     <!-- region Pasek nawigacyjny-->
     <nav class="navbar">
         <a href="{% url 'info' %}">Info</a> |
@@ -36,6 +38,12 @@
         {% endblock %}
     </main>
     <!-- endregion -->
+    <footer class="site-footer">
+      <div class="footer-content">
+        <p>&copy; {{ year }} Projekt — stworzony przez Dawid Wendt</p>
+        <p>Projekt edukacyjny, algorytmy: AES, RSA, McEliece</p>
+      </div>
+    </footer>
 </body>
 </html>
 
@@ -166,8 +174,55 @@ function pokaz(id) {
   ['info','aes', 'rsa', 'mceliece'].forEach(nazwa => {
     const el = document.getElementById(nazwa);
     if (el) {
-      el.style.display = (nazwa === id) ? 'block' : 'none';
+      el.style.setProperty('display', nazwa === id ? 'block' : 'none', 'important');
     }
   });
 }
+</script>
+
+<script>
+function kopiujDoSchowka(element) {
+    let range, selection;
+
+    // Specjalne kopiowanie dla <pre> i innych elementów bez .select()
+    if (element.tagName === "PRE" || element.tagName === "DIV" || element.tagName === "SPAN") {
+        range = document.createRange();
+        range.selectNodeContents(element);
+
+        selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+    } else if (element.select) {
+        // Dla textarea/input
+        element.select();
+    }
+
+    // Kopiuj do schowka
+    document.execCommand("copy");
+
+    const kontener = document.getElementById("notifications");
+    if (!kontener) return;
+
+    const komunikat = document.createElement("div");
+    komunikat.className = "notif success"; // identycznie jak messages.success
+    komunikat.textContent = "Skopiowano do schowka.";
+
+    kontener.appendChild(komunikat);
+
+    setTimeout(() => {
+        komunikat.classList.add("fade-out");
+        setTimeout(() => komunikat.remove(), 500);
+    }, 2500);
+}
+</script>
+
+<script>
+    window.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("#notifications .notif.fade").forEach(el => {
+        setTimeout(() => {
+            el.classList.add("fade-out");
+            setTimeout(() => el.remove(), 500);
+        }, 2500);
+    });
+});
 </script>

@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.shortcuts import redirect
 # from django.contrib import admin
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -33,3 +34,6 @@ urlpatterns = [
     path("moje_pliki/usun/<int:pk>/", Szyfrowanie.views.Usun_Plik.as_view(), name="usun_plik"),
     path("moje_pliki/odszyfruj/<int:pk>/", Szyfrowanie.views.Odszyfruj_Plik.as_view(), name="odszyfruj_plik"),
 ]
+
+
+handler404 = lambda request, exception=None: redirect('info')

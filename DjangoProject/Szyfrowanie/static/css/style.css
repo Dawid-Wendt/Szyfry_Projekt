@@ -246,7 +246,6 @@ th:nth-child(4) {
 }
 
 .section-szyfr {
-  display: none !important;
   max-width: 960px;
   margin: 40px auto;
   padding: 20px;
@@ -254,4 +253,43 @@ th:nth-child(4) {
   color: #e0e0e0;
 }
 
+.notif {
+    opacity: 1;
+    transition: opacity 0.5s ease-out;
+}
+
+.fade-out {
+    opacity: 0;
+}
+
+.notif.fade {
+    opacity: 1;
+    transition: opacity 0.5s ease-out;
+}
+
+.notif.fade.fade-out {
+    opacity: 0;
+}
+
+.site-footer {
+  background-color: #181818;
+  color: #cccccc;
+  text-align: center;
+  padding: 20px;
+  font-size: 0.9em;
+  border-top: 1px solid #333;
+  position: relative;
+  margin-top: auto;
+  bottom: 0;
+  width: 100%;
+}
+
+.site-footer a {
+  color: #aaa;
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  color: #fff;
+}
 

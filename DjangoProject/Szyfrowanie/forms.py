@@ -12,7 +12,7 @@ class Form_De_Szyfr(forms.Form):
     tekst = forms.CharField(widget=forms.Textarea, label="Tekst do deszyfrowania", required=False)
     plik = forms.FileField(label="Plik z zaszyfrowanym tekstem", required=False)
     metoda = forms.ChoiceField(choices=[(klucz, klucz) for klucz in SZYFRY], label="Wybierz metodę szyfrowania")
-    klucz = forms.CharField(label="Klucz do deszyfrowania", required=True)
+    klucz = forms.CharField(widget=forms.Textarea, label="Klucz do deszyfrowania", required=True)
 
 class Form_Rejestracja(forms.Form):
     username = forms.CharField(label="Nazwa użytkownika",error_messages={"required": "Musisz podać nazwę użytkownika."})
@@ -39,4 +39,4 @@ class Form_Logowanie(forms.Form):
 class Form_Dodaj_Plik(forms.Form):
     plik = forms.FileField(label="Plik do dodania")
     metoda = forms.ChoiceField(choices=[(k, k) for k in SZYFRY], label="Metoda szyfrowania")
-    klucz = forms.CharField(label="Klucz do deszyfrowania", required=True)
+    klucz = forms.CharField(widget=forms.Textarea, label="Klucz do deszyfrowania", required=True)

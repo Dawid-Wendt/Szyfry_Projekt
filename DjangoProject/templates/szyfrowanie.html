@@ -49,9 +49,9 @@
     <!--region Pole z zaszyfrowanym Tekstem i przyciskami do pobierania i zapisywania do bazy-->
     {% if zaszyfrowany_tekst %}
         <h2>Zaszyfrowany tekst:</h2>
-        <textarea id="zaszfyrowany" readonly rows="5" cols="50">{{ zaszyfrowany_tekst }}</textarea>
+        <textarea id="zaszfyrowany" onclick="kopiujDoSchowka(this)" readonly rows="5" cols="50">{{ zaszyfrowany_tekst }}</textarea>
         <h2>Wygenerowany klucz do deszyfrowania:</h2>
-        <textarea id="klucz" readonly rows="5" cols="50">{{ klucz }}</textarea>
+        <textarea id="klucz" onclick="kopiujDoSchowka(this)" readonly rows="5" cols="50">{{ klucz }}</textarea>
         {# Pole z zaszyfrowanym tekstem #}
         <a id="link" style="display: none;"></a>
         <button type="button" onclick="Pobierz_Plik()">Pobierz jako plik</button> {# Przycisk do zapisu pliku na dysk #}
@@ -72,7 +72,10 @@
         {% endif %}
     {% endif %}
     <!--endregion-->
-
 {% endblock %}
 
-
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    pokaz("info");
+});
+</script>
